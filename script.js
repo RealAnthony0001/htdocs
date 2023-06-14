@@ -8,7 +8,7 @@ class GradeTracker {
         document.getElementById('loadBtn').addEventListener('click', this.loadGrades.bind(this));
     }
 
-    // Save grades to local storage
+    // Save grades to local storage and db
     saveGrades() {
         // Get all rows
         var rows = Array.from(document.getElementsByClassName('row'));
@@ -34,33 +34,58 @@ class GradeTracker {
             gradeData.push({ subject, grades: gradeValues });
         });
 
-        // Save the data to local storage
-        localStorage.setItem('gradeData', JSON.stringify(gradeData));
-        alert("Saved");
-    }
-
-    // Load grades from local storage
-    loadGrades() {
-        // Get the data from local storage
-        var gradeDataStr = localStorage.getItem('gradeData');
-        if (gradeDataStr) {
-            var gradeData = JSON.parse(gradeDataStr);
-
-            // Clear the table
-            document.getElementById('gradeTable').innerHTML = '';
-
-            // Add each subject and its grades back to the table
-            gradeData.forEach(data => {
-                data.grades.forEach(grade => {
-                    document.getElementById('subject').value = data.subject;
-                    document.getElementById('grade').value = grade.grade;
-                    document.getElementById('weight').value = grade.weight;
-                    this.addAssessment();
-                });
+        // Save the data to the server
+        fetch('./saveGrades.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(gradeData),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Saved');
+                } else {
+                    alert('Error saving data');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving the data');
             });
-        }
-        alert("Loaded");
     }
+
+// Load grades from the server
+    loadGrades() {
+        // Get the data from the server
+        fetch('./loadGrades.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    // Clear the table
+                    document.getElementById('gradeTable').innerHTML = '';
+
+                    // Add each subject and its grades back to the table
+                    data.forEach(row => {
+                        document.getElementById('subject').value = row.subject;
+                        document.getElementById('grade').value = row.grade;
+                        document.getElementById('weight').value = row.weight;
+                        this.addAssessment();
+                    });
+
+                    alert('Loaded');
+                } else {
+                    alert('No data to load');
+                }
+            });
+    }
+
 
     // Add an assessment to the table
     addAssessment() {
