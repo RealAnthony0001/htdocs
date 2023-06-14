@@ -6,7 +6,7 @@ A school project for WA
 
 ## Installation
 
-Download xampp, put the project files into XAMPP/htdocs. Log into the mysql server. Create the DB:
+Download xampp, put the project files into XAMPP/htdocs. Log into the mysql server using root and no password. Create the DB:
 
 ```
 CREATE DATABASE app
